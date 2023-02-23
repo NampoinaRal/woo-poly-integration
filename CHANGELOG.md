@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.5.2
+* Fixes Fatal error : $num must be (float|int), string given
+* Fixes product _default_attributes lost after updating non default language product update (more than 1 default attributes)
+
 ###  1.5.1
 * [fixes #545 keep fields unlocked if products does not exist in default language props mrleemon](https://github.com/hyyan/woo-poly-integration/issues/545)
 * [fixes #549 Quick edit Product synchronisation issues](https://github.com/hyyan/woo-poly-integration/issues/549)
