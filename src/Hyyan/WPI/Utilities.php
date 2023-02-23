@@ -153,8 +153,8 @@ final class Utilities
     public static function getCurrentUrl()
     {
         return (is_ssl() ? 'https://' : 'http://')
-                . $_SERVER['HTTP_HOST']
-                . $_SERVER['REQUEST_URI'];
+            . $_SERVER['HTTP_HOST']
+            . $_SERVER['REQUEST_URI'];
     }
 
     /**
@@ -180,11 +180,17 @@ final class Utilities
 
         if (true === $jquery) {
             $result = sprintf(
-                    "%s\n jQuery(function ($) {\n %s \n});\n %s \n", $header, $code, $footer
+                "%s\n jQuery(function ($) {\n %s \n});\n %s \n",
+                $header,
+                $code,
+                $footer
             );
         } else {
             $result = sprintf(
-                    "%s\n %s \n%s", $header, $code, $footer
+                "%s\n %s \n%s",
+                $header,
+                $code,
+                $footer
             );
         }
 
@@ -258,28 +264,27 @@ final class Utilities
             $langs              = array();
 
             foreach ($default_attributes as $key => $value) {
-				        $args	 = array(
-					        'get'					 => 'all',
-      					  'number'				 => 1,
-        					'taxonomy'				 => $key,
-        					'update_term_meta_cache' => false,
-        					'orderby'				 => 'none',
-		        			'suppress_filter'		 => true,
-      	  				'slug'					 => $value,
-      		  			'lang'					 => pll_get_post_language( $product_id )
-		      		  );
-								$this_attr_terms = get_terms( $args );
-								if ( $this_attr_terms && ( ! is_wp_error( $this_attr_terms ) ) ) {
-      					    $term = array_shift( $this_attr_terms );
-
-      					    if ($term && pll_is_translated_taxonomy($term->taxonomy)) {
-      					        $terms[] = $term;
-      					    } else {
-      					        $terms[] = array($key => $value);
+                $args = array(
+                    'get'                    => 'all',
+                    'number'                 => 1,
+                    'taxonomy'               => $key,
+                    'update_term_meta_cache' => false,
+                    'orderby'                => 'none',
+                    'suppress_filter'        => true,
+                    'slug'                   => $value,
+                    'lang'                   => pll_get_post_language($product_id)
+                );
+                $this_attr_terms = get_terms($args);
+                if ($this_attr_terms && (!is_wp_error($this_attr_terms))) {
+                    $term = array_shift($this_attr_terms);
+                    if ($term && pll_is_translated_taxonomy($term->taxonomy)) {
+                        $terms[] = $term;
+                    } else {
+                        $terms[] = array($key => $value);
                     }
-      				  } else {
-      					  $terms = array( array( $key => $value ) );
-      				  }
+                } else {
+                    $terms[] = array($key => $value);
+                }
             }
 
             // For each product translation, get the translated default attributes
@@ -298,7 +303,7 @@ final class Utilities
                         $translated_term_id = pll_get_term($term->term_id, $lang);
                         // Skip for attribute terms that don't have translations
                         if ($translated_term_id) {
-                            $translated_term                              = get_term_by('id', $translated_term_id, $term->taxonomy);
+                            $translated_term = get_term_by('id', $translated_term_id, $term->taxonomy);
                             $translated_terms[$translated_term->taxonomy] = $translated_term->slug;
                         }
                     } else {
@@ -462,7 +467,7 @@ final class Utilities
     public static function get_translated_variation($product_id, $lang)
     {
         $langparam = $lang;
-        if (! $lang) {
+        if (!$lang) {
             $lang = pll_current_language();
         }
         //if input is already in correct language just return it
@@ -482,13 +487,13 @@ final class Utilities
             $parent_id = $product->get_parent_id();
             $translated_id = pll_get_post($parent_id, $lang);
             //if no translation return the original product variation id
-            if ((! $translated_id) || ($translated_id == $parent_id)) {
+            if ((!$translated_id) || ($translated_id == $parent_id)) {
                 return $product_id;
             }
             //ok, it's a variation and the parent product is translated, so here's what to do:
             //find the master link for this variation using the Hyyan '_point_to_variation' key
             $variationmaster = get_post_meta($product_id, '_point_to_variation');
-            if (! $variationmaster) {
+            if (!$variationmaster) {
                 return $product_id;
             }
             //and now the related variation for the translation
@@ -509,111 +514,113 @@ final class Utilities
         }
     }
 
-	/*
+    /*
 	 * Ensure product cache is refreshed and product_meta_lookup updated for any changed meta
 	 *
 	 *  @param int $the_product   id of Product or product object
 	 */
-	public static function flushCacheUpdateLookupTable( $the_product ) {
-		$product = wc_get_product( $the_product );
-		if ( $product ) {
-			$id			 = $product->get_id();
-			wc_delete_product_transients( $id );
-			wp_cache_delete( $id, 'post_meta' );
-			wp_cache_delete( $id, 'posts' );
-			wp_cache_delete( 'lookup_table', 'object_' . $id );
-			$productType = $product->get_type();
+    public static function flushCacheUpdateLookupTable($the_product)
+    {
+        $product = wc_get_product($the_product);
+        if ($product) {
+            $id             = $product->get_id();
+            wc_delete_product_transients($id);
+            wp_cache_delete($id, 'post_meta');
+            wp_cache_delete($id, 'posts');
+            wp_cache_delete('lookup_table', 'object_' . $id);
+            $productType = $product->get_type();
 
-			$datastoreType = 'product';
-			switch ( $productType ) {
-				case 'variable':
-				case 'grouped':
-				case 'variation':
-					$datastoreType .= '-' . $productType;
-			}
-			$data_store = \WC_Data_Store::load( $datastoreType );
-			//woocommerce 3.6 initial releases made all the lookup table functions protected so we cannot call them
-			//woocommmerce pull request 23820 currently labelled for 3.7.0 milestone should make this public in future
-			//note that is_callable() cannot test for implementation here as root class WC_Data_Store implements __call()
-			//if ( is_callable( array( $data_store, 'update_lookup_table' ) ) ) {
-			//method_exists also returns true if protected so also need reflection to confirm if it is callable
-			//cant test this on the datastore object itself as the method is not part of the datastore interface
-			//so test the product data store itself
-			if ( method_exists( 'WC_Product_Data_Store_CPT', 'update_lookup_table' ) ) {
-				$product_data_store	 = new \WC_Product_Data_Store_CPT();
-				$reflection			 = new \ReflectionMethod( $product_data_store, 'update_lookup_table' );
-				if ( $reflection->isPublic() ) {
-					$data_store->update_lookup_table( $id, 'wc_product_meta_lookup' );
-				} else {
-					//in the meantime an increase of zero in the product sales will force the update...
-					$data_store->update_product_sales( $id, 0, 'increase' );
-				}
-			}
-		}
-	}
+            $datastoreType = 'product';
+            switch ($productType) {
+                case 'variable':
+                case 'grouped':
+                case 'variation':
+                    $datastoreType .= '-' . $productType;
+            }
+            $data_store = \WC_Data_Store::load($datastoreType);
+            //woocommerce 3.6 initial releases made all the lookup table functions protected so we cannot call them
+            //woocommmerce pull request 23820 currently labelled for 3.7.0 milestone should make this public in future
+            //note that is_callable() cannot test for implementation here as root class WC_Data_Store implements __call()
+            //if ( is_callable( array( $data_store, 'update_lookup_table' ) ) ) {
+            //method_exists also returns true if protected so also need reflection to confirm if it is callable
+            //cant test this on the datastore object itself as the method is not part of the datastore interface
+            //so test the product data store itself
+            if (method_exists('WC_Product_Data_Store_CPT', 'update_lookup_table')) {
+                $product_data_store     = new \WC_Product_Data_Store_CPT();
+                $reflection             = new \ReflectionMethod($product_data_store, 'update_lookup_table');
+                if ($reflection->isPublic()) {
+                    $data_store->update_lookup_table($id, 'wc_product_meta_lookup');
+                } else {
+                    //in the meantime an increase of zero in the product sales will force the update...
+                    $data_store->update_product_sales($id, 0, 'increase');
+                }
+            }
+        }
+    }
 
-	/**
-	 * Reload text domains with requested locale.
-	 *
-	 * @param string $languageLocale Language locale (e.g. en_GB, de_DE )
-	 */
-	public static function switchLocale( $languageLocale ) 
-	{
-		static::switch_pll_locale( $languageLocale );
-		static::switch_wp_locale( $languageLocale );
-	}
+    /**
+     * Reload text domains with requested locale.
+     *
+     * @param string $languageLocale Language locale (e.g. en_GB, de_DE )
+     */
+    public static function switchLocale($languageLocale)
+    {
+        static::switch_pll_locale($languageLocale);
+        static::switch_wp_locale($languageLocale);
+    }
 
-	/*
+    /*
 	 * switch wordpress language
 	 * Note, as per previous functions this function does not attempt to avoid switching if already switched
 	 *
 	 * @param string $languageLocale Language locale (e.g. en_GB, de_DE )
 	 */
-	public static function switch_wp_locale( $languageLocale ) {
-			if ( ! $languageLocale ) {
-			    return;
-			}
+    public static function switch_wp_locale($languageLocale)
+    {
+        if (!$languageLocale) {
+            return;
+        }
 
-			// unload plugin's textdomains
-			unload_textdomain( 'default' );
-			unload_textdomain( 'woocommerce' );
+        // unload plugin's textdomains
+        unload_textdomain('default');
+        unload_textdomain('woocommerce');
 
-			//remove any previous filter
-			remove_all_filters( 'plugin_locale', 999 );
-			//allow other plugins opportunity to unload text domain
-			do_action( HooksInterface::EMAILS_SWITCH_LANGUAGE_ACTION, $languageLocale );
+        //remove any previous filter
+        remove_all_filters('plugin_locale', 999);
+        //allow other plugins opportunity to unload text domain
+        do_action(HooksInterface::EMAILS_SWITCH_LANGUAGE_ACTION, $languageLocale);
 
-			//switch locale
-			if ( function_exists( 'switch_to_locale' ) ) {
-			    switch_to_locale( $languageLocale );
-			}
+        //switch locale
+        if (function_exists('switch_to_locale')) {
+            switch_to_locale($languageLocale);
+        }
 
-			//create closure to filter plugin locale so other calls during language
-			//switching pick up correct plugin locale
-			$locale_fn = function() use ($languageLocale) {
-			    return $languageLocale;
-			};
+        //create closure to filter plugin locale so other calls during language
+        //switching pick up correct plugin locale
+        $locale_fn = function () use ($languageLocale) {
+            return $languageLocale;
+        };
 
-			// Filter on plugin_locale so load_plugin_textdomain loads the correct locale.
-			add_filter( 'plugin_locale', $locale_fn, 9999 );
+        // Filter on plugin_locale so load_plugin_textdomain loads the correct locale.
+        add_filter('plugin_locale', $locale_fn, 9999);
 
-			// (re-)load plugin's textdomain with supplied locale
-			load_default_textdomain( $languageLocale );
-			global $woocommerce;
-			if ( $woocommerce ) {
-			    $woocommerce->load_plugin_textdomain();
-			}
+        // (re-)load plugin's textdomain with supplied locale
+        load_default_textdomain($languageLocale);
+        global $woocommerce;
+        if ($woocommerce) {
+            $woocommerce->load_plugin_textdomain();
+        }
 
-			//allow other plugins opportunity to reload text domain
-			do_action( HooksInterface::EMAILS_AFTER_SWITCH_LANGUAGE_ACTION, $languageLocale );
+        //allow other plugins opportunity to reload text domain
+        do_action(HooksInterface::EMAILS_AFTER_SWITCH_LANGUAGE_ACTION, $languageLocale);
 
-			$wp_locale = new \WP_Locale();
-			//remove_filter does not work with closure so use remove_all_filters with priority
-			//remove_filter( 'plugin_locale', $locale_fn, 9999 );
-			remove_all_filters( 'plugin_locale', 9999 );
-	}
+        $wp_locale = new \WP_Locale();
+        //remove_filter does not work with closure so use remove_all_filters with priority
+        //remove_filter( 'plugin_locale', $locale_fn, 9999 );
+        remove_all_filters('plugin_locale', 9999);
+    }
 
-	/*
+    /*
 	 * set polylang current language, which in admin mode may be different from both user interface language and shop base language
 	 * For example, shop in English, shop manager in Spanish, polylang filter could be set to Show all languages or eg to filter on French
 	 * So after performing specific operations in a particular language polylang should be reset to initial value
@@ -621,45 +628,45 @@ final class Utilities
 	 * @param string $languageLocale Language locale (e.g. en_GB, de_DE )
 	 * 							   or false to return pll to Show all languages
 	 */
-	public static function switch_pll_locale( $languageLocale ) {
-		if ( ! class_exists( 'Polylang' ) ) {
-			return;
-		}
+    public static function switch_pll_locale($languageLocale)
+    {
+        if (!class_exists('Polylang')) {
+            return;
+        }
 
-		global $polylang;
-		static $cache; // Polylang string translations cache object to avoid loading the same translations object several times
-		// Cache object not found. Create one...
-		if ( empty( $cache ) ) {
-			$cache = new \PLL_Cache();
-		}
+        global $polylang;
+        static $cache; // Polylang string translations cache object to avoid loading the same translations object several times
+        // Cache object not found. Create one...
+        if (empty($cache)) {
+            $cache = new \PLL_Cache();
+        }
 
-		//if we are switching languages, set the polylang curlang
-		//and load string translations for that language
-		if ( $languageLocale ) {
-			$pll_lang = $polylang->model->get_language( $languageLocale );
-			if ( $pll_lang ) {
-				$polylang->curlang = $pll_lang;
-				$GLOBALS[ 'text_direction' ] = $pll_lang->is_rtl ? 'rtl' : 'ltr';
-			} else {
-				//20190630: old code used in previous versions of this plugin
-				$polylang->curlang->locale = $languageLocale;
-			}
-			// Cache miss
-			$mo = $cache->get( $languageLocale );
-			//if it is a valid language which does not yet have string translations loaded
-			if ( $pll_lang && ! $mo ) {
-				$mo = new \PLL_MO();
-				$mo->import_from_db( $pll_lang );
-				// Add to cache
-				$cache->set( $languageLocale, $mo );
-			}
-			if ( $mo ) {
-				$GLOBALS[ 'l10n' ][ 'pll_string' ] = &$mo;
-			}
-		} else {
-			//if the $languageLocale is not set return to Show all languages
-			$polylang->curlang = false;
-		}
-	}
-
+        //if we are switching languages, set the polylang curlang
+        //and load string translations for that language
+        if ($languageLocale) {
+            $pll_lang = $polylang->model->get_language($languageLocale);
+            if ($pll_lang) {
+                $polylang->curlang = $pll_lang;
+                $GLOBALS['text_direction'] = $pll_lang->is_rtl ? 'rtl' : 'ltr';
+            } else {
+                //20190630: old code used in previous versions of this plugin
+                $polylang->curlang->locale = $languageLocale;
+            }
+            // Cache miss
+            $mo = $cache->get($languageLocale);
+            //if it is a valid language which does not yet have string translations loaded
+            if ($pll_lang && !$mo) {
+                $mo = new \PLL_MO();
+                $mo->import_from_db($pll_lang);
+                // Add to cache
+                $cache->set($languageLocale, $mo);
+            }
+            if ($mo) {
+                $GLOBALS['l10n']['pll_string'] = &$mo;
+            }
+        } else {
+            //if the $languageLocale is not set return to Show all languages
+            $polylang->curlang = false;
+        }
+    }
 }
