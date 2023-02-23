@@ -97,7 +97,7 @@ class Features extends AbstractSettings
                             __(
                         'Sync stock for product and its translations', 'woo-poly-integration'
                 ) . '.</a> <strong>' . __(
-                        'Note: this setting affects user actions on stock, to control synchronisation when editing products check the settings for Metas List, Stock Metas.', 'woo-poly-integration', 'woo-poly-integration'
+                        'Note: this setting affects user actions on stock, to control synchronisation when editing products check the settings for Metas List, Stock Metas.', 'woo-poly-integration'
                 ) . '</strong>',
             ),
             array(
