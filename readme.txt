@@ -1,9 +1,10 @@
 === Hyyan WooCommerce Polylang Integration===
 Contributors: hyyan, jonathanmoorebcsorg
+Fork : Nampoina Razafindralaisa
 Tags: cms, woocommerce, multilingual, polylang, bilingual, international, language, localization, multilanguage, multilingual, translate, translation
 Requires at least: 5.4
 Stable tag: 1.5.1
-Tested Up To: 5.7.1
+Tested Up To: 6.1.1
 WC requires at least: 4.0.0
 WC tested up to: 5.3.0
 Requires PHP: 7.0
